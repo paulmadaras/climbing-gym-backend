@@ -1,2 +1,0 @@
-# climbing-gym-backdend
-
