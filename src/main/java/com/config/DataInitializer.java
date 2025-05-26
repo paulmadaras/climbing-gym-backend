@@ -17,26 +17,25 @@ public class DataInitializer implements CommandLineRunner {
     private final UserService userService;
     private final BookingService bookingService;
     private final MembershipService membershipService;
-    private final PaymentService paymentService;
 
     public DataInitializer(
             UserService userService,
             BookingService bookingService,
-            MembershipService membershipService,
-            PaymentService paymentService
+            MembershipService membershipService
     ) {
         this.userService = userService;
         this.bookingService = bookingService;
         this.membershipService = membershipService;
-        this.paymentService = paymentService;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        seedUsersAndTransactions();
+        seedUsers();
+        seedBookingsAndMemberships();
     }
 
-    private void seedUsersAndTransactions() {
+    private void seedUsers(){
+
         // only seed if no users exist
         if (userService.findAll().isEmpty()) {
 
@@ -44,15 +43,15 @@ public class DataInitializer implements CommandLineRunner {
             final String defaultPassword = "Pass123!";
 
             // 2) Seed climber/student users from parallel lists
-            List<String> firstNames = List.of("Paul", "Alice", "Bob");
-            List<String> lastNames  = List.of("Iordache", "Smith", "Jones");
+            List<String> firstNames = List.of("Paul", "Rafael Dorian", "Maria Eliza", "Calina Annemary", "Felix", "Mihai Ionut");
+            List<String> lastNames = List.of("Iordache", "Butas", "Gozaman-Pop", "Borzan", "Dumitrescu", "Leo");
             String domain = "example.com";
 
             for (int i = 0; i < firstNames.size(); i++) {
                 String first = firstNames.get(i);
-                String last  = lastNames.get(i);
+                String last = lastNames.get(i).replaceAll("-", " ");
                 String username = first.toLowerCase() + last.toLowerCase();
-                String email = (username + "@" + domain).toLowerCase();
+                String email = (username.replace(" ", "_") + "@" + domain).toLowerCase();
 
                 User climber = new User(
                         first,
@@ -90,45 +89,38 @@ public class DataInitializer implements CommandLineRunner {
             );
             admin.setStudent(false);
             userService.create(admin);
+        }
+    }
 
-            // 5) Pick the first climber to make a booking & membership
-            User climber1 = userService.findAll().stream()
-                    .filter(u -> u.getRole() == Role.CLIMBER)
-                    .findFirst()
-                    .orElseThrow();
+    private void seedBookingsAndMemberships() {
 
-            // 6) Create a booking for tomorrow
-            Booking booking = bookingService.createBooking(climber1.getId(), LocalDate.now());
+        // get all climbers in insertion order
+        List<User> climbers = userService.findAll().stream()
+                .filter(u -> u.getRole() == Role.CLIMBER)
+                .toList();
 
-            // 7) Create a membership for the next month
-            Membership membership = membershipService.createMembership(
-                    climber1.getId(),
-                    MembershipPlan.EIGHT, // 8-days-a-month plan
-                    LocalDate.now()
-            );
 
-            // 8) Record a payment for the booking
-            PaymentDto p1 = new PaymentDto();
-            p1.setUserId(climber1.getId());
-            p1.setBookingId(booking.getId());
-            p1.setAmount(bookingService.calculatePrice(BookingPlan.NORMAL));
-            p1.setMethod("CARD");
-            p1.setDate(LocalDate.now());
-            paymentService.create(p1);
+        if (climbers.isEmpty()) return;
 
-            // 9) Record a payment for the membership
-            PaymentDto p2 = new PaymentDto();
-            p2.setUserId(climber1.getId());
-            p2.setMembershipId(membership.getId());
-            p2.setAmount(membershipService
-                    .findById(membership.getId())
-                    .getPlanType() == MembershipPlan.EIGHT
-                    ? membershipService.findById(membership.getId()).getPrice()
-                    : 0.0
-            );
-            p2.setMethod("CARD");
-            p2.setDate(LocalDate.now());
-            paymentService.create(p2);
+        int half = (climbers.size() + 1) / 2;  // odd→first half slightly larger
+
+        for (int i = 0; i < climbers.size(); i++) {
+            User c = climbers.get(i);
+
+            if (i < half) {
+                // FIRST HALF → membership
+                membershipService.createMembership(
+                        c.getId(),
+                        MembershipPlan.EIGHT,
+                        LocalDate.now()
+                );
+            } else {
+                // SECOND HALF → simple booking (today)
+                bookingService.createBooking(
+                        c.getId(),
+                        LocalDate.now()
+                );
+            }
         }
     }
 }
