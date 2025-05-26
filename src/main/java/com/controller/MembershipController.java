@@ -30,8 +30,7 @@ public class MembershipController {
         Membership created = membershipSvc.createMembership(
                 userId,
                 dto.getPlanType(),
-                dto.getStartDate(),
-                dto.getEndDate()
+                dto.getStartDate()
         );
         return ResponseEntity.status(201).body(created);
     }

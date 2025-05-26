@@ -27,7 +27,7 @@ public class Booking {
 
     public Booking() {}
 
-    public Booking(LocalDate bookingDate, User user) {
+    public Booking(User user, LocalDate bookingDate) {
         this.bookingDate = bookingDate;
         this.user = user;
     }
@@ -53,5 +53,9 @@ public class Booking {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Long getUserId() {
+        return this.user.getId();
     }
 }

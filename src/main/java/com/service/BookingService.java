@@ -1,51 +1,60 @@
 // com/service/BookingService.java
 package com.service;
 
-import com.model.Booking;
-import com.model.User;
-import com.repository.BookingRepository;
-import com.repository.UserRepository;
+import com.model.*;
+import com.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import com.repository.BookingPlanRepository;
-import com.model.BookingPlan;
-import com.model.BookingPlanImpl;
+
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class BookingService {
 
+    private final MembershipRepository membershipRepo;
     private final BookingPlanRepository bookingPlanRepo;
     private final BookingRepository bookingRepo;
     private final UserRepository userRepo;
 
-    public BookingService(BookingPlanRepository bookingPlanRepo,
+    public BookingService(MembershipRepository membershipRepo, BookingPlanRepository bookingPlanRepo,
                           BookingRepository bookingRepo,
                           UserRepository userRepo) {
+        this.membershipRepo = membershipRepo;
         this.bookingPlanRepo = bookingPlanRepo;
         this.bookingRepo = bookingRepo;
         this.userRepo = userRepo;
     }
 
-    /** List all configured booking plans */
-    public List<BookingPlanImpl> getAllBookingPlans() {
-        return bookingPlanRepo.findAll();
-    }
-
     /** Fetch a single plan by enum type */
-    public BookingPlanImpl getBookingPlan(BookingPlan planType) {
-        return bookingPlanRepo.findByPlanType(planType)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Booking plan not found: " + planType));
+    public BookingPlanImpl getConfig() {
+        return bookingPlanRepo.findAll().stream().findFirst().
+                orElseThrow(() -> new IllegalArgumentException(
+                        "No config found. Please create a booking plan first."));
     }
 
-    /** Calculate the price for a given plan */
+    /**
+     * Calculate the price for any BookingPlan,
+     * using the single config values.
+     */
     public double calculatePrice(BookingPlan planType) {
-        BookingPlanImpl plan = getBookingPlan(planType);
-        return plan.getPrice();
+        BookingPlanImpl cfg = getConfig();
+        switch (planType) {
+            case NORMAL:
+                return cfg.getBasePrice();
+            case STUDENT:
+                return cfg.getBasePrice() * (1 - cfg.getDiscountRate());
+            case NORMAL_PLUS_SHOES:
+                return cfg.getBasePrice() + cfg.getShoesPrice();
+            case STUDENT_PLUS_SHOES:
+                return (cfg.getBasePrice() + cfg.getShoesPrice()) * (1 - cfg.getDiscountRate());
+            case JUST_SHOES:
+                return cfg.getShoesPrice();
+            default:
+                throw new IllegalArgumentException("Unknown plan: " + planType);
+        }
     }
 
     public List<Booking> findAll() {
@@ -59,7 +68,24 @@ public class BookingService {
 
     public Booking createBooking(Long userId, LocalDate bookingDate) {
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID: " + userId));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Invalid user ID: " + userId));
+
+        // **Validation: user must NOT have an active membership on bookingDate**
+        boolean hasActiveMembership = membershipRepo
+                .findByUserId(userId)
+                .stream()
+                .anyMatch(m ->
+                        !m.getStartDate().isAfter(bookingDate) &&
+                                !m.getEndDate().isBefore(bookingDate)
+                );
+        if (hasActiveMembership) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot book: user has an active membership covering " + bookingDate
+            );
+        }
+
         Booking booking = new Booking(bookingDate, user);
         return bookingRepo.save(booking);
     }

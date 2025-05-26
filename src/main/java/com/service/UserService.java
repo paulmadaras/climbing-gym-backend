@@ -2,6 +2,7 @@ package com.service;
 
 import com.model.User;
 import com.repository.UserRepository;
+import com.validation.EmailValidator;
 import com.validation.PasswordValidator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +18,7 @@ public class UserService {
     private final UserRepository userRepo;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final PasswordValidator passwordValidator = new PasswordValidator();
+    private final EmailValidator emailValidator = new EmailValidator();
 
     public UserService(UserRepository userRepo) {
         this.userRepo = userRepo;
@@ -41,6 +43,12 @@ public class UserService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Password must be at least 8 characters, include upper/lowercase, a digit and a special character"
+            );
+        }
+        if (!emailValidator.isValid(user.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid email format: " + user.getEmail()
             );
         }
         String hashed = passwordEncoder.encode(raw);

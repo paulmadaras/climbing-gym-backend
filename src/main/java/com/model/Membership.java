@@ -31,7 +31,7 @@ public class Membership {
     public Membership() {
     }
 
-    public Membership(MembershipPlan planType, LocalDate startDate, User user) {
+    public Membership(User user, MembershipPlan planType, LocalDate startDate) {
         this.planType = planType;
         this.startDate = startDate;
         this.endDate = startDate.plusMonths(1);
@@ -77,8 +77,8 @@ public class Membership {
         return endDate;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
+    public void setEndDate() {
+        this.endDate = startDate.plusMonths(1);
     }
 
     public User getUser() {
@@ -87,5 +87,9 @@ public class Membership {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Long getUserId() {
+        return this.user.getId();
     }
 }

@@ -9,30 +9,45 @@ public class MembershipPlanImpl {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(unique = true, nullable = false)
-    private MembershipPlan planType;
-
     private double basePrice;
     private double eightPrice;
     private double discountRate; // e.g. 0.2 = 20%
 
-    public MembershipPlanImpl() {} // JPA
+    public MembershipPlanImpl() {
 
-    // getters & setters...
+    }
 
-    public double getPrice() {
-        switch (planType) {
-            case EVERYDAY:
-                return basePrice;
-            case EIGHT:
-                return eightPrice;
-            case STUDENT:
-                return basePrice * (1 - discountRate);
-            case STUDENT_EIGHT:
-                return eightPrice * (1 - discountRate);
-            default:
-                throw new IllegalArgumentException("Unknown plan: " + planType);
-        }
+    public MembershipPlanImpl(double basePrice, double eightPrice, double discountRate) {
+        this.basePrice = basePrice;
+        this.eightPrice = eightPrice;
+        this.discountRate = discountRate;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public double getBasePrice() {
+        return basePrice;
+    }
+
+    public void setBasePrice(double basePrice) {
+        this.basePrice = basePrice;
+    }
+
+    public double getEightPrice() {
+        return eightPrice;
+    }
+
+    public void setEightPrice(double eightPrice) {
+        this.eightPrice = eightPrice;
+    }
+
+    public double getDiscountRate() {
+        return discountRate;
+    }
+
+    public void setDiscountRate(double discountRate) {
+        this.discountRate = discountRate;
     }
 }
