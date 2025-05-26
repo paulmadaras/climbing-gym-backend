@@ -27,7 +27,7 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<Booking> create(@PathVariable Long userId,
                                           @RequestBody BookingDto dto) {
-        Booking created = bookingSvc.createBooking(userId, dto.getBookingDate());
+        Booking created = bookingSvc.createBooking(userId, dto.getBookingPlan(), dto.getBookingDate());
         return ResponseEntity.status(201).body(created);
     }
 

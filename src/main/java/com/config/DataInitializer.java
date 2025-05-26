@@ -7,6 +7,7 @@ import com.dto.PaymentDto;
 import com.service.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,8 +31,36 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        seedBookingPlanConfig();
+        seedMembershipPlanConfig();
         seedUsers();
         seedBookingsAndMemberships();
+    }
+
+    private void seedBookingPlanConfig() {
+        try {
+            // if this succeeds, there’s already a config row
+            bookingService.getConfig();
+        } catch (ResponseStatusException | IllegalArgumentException ex) {
+            // not found → create it
+            bookingService.updateConfig(
+                    /* basePrice: */     20.0,
+                    /* discountRate: */  0.2,
+                    /* shoesPrice: */    5.0
+            );
+        }
+    }
+
+    private void seedMembershipPlanConfig() {
+        try {
+            membershipService.getConfig();
+        } catch (ResponseStatusException | IllegalArgumentException ex) {
+            membershipService.updateConfig(
+                    /* basePrice: */    60.0,
+                    /* eightPrice: */   40.0,
+                    /* discountRate: */ 0.2
+            );
+        }
     }
 
     private void seedUsers(){
@@ -44,7 +73,7 @@ public class DataInitializer implements CommandLineRunner {
 
             // 2) Seed climber/student users from parallel lists
             List<String> firstNames = List.of("Paul", "Rafael Dorian", "Maria Eliza", "Calina Annemary", "Felix", "Mihai Ionut");
-            List<String> lastNames = List.of("Iordache", "Butas", "Gozaman-Pop", "Borzan", "Dumitrescu", "Leo");
+            List<String> lastNames = List.of("Iordache", "Butas", "Gozman-Pop", "Borzan", "Dumitrescu", "Leo");
             String domain = "example.com";
 
             for (int i = 0; i < firstNames.size(); i++) {
@@ -118,6 +147,7 @@ public class DataInitializer implements CommandLineRunner {
                 // SECOND HALF → simple booking (today)
                 bookingService.createBooking(
                         c.getId(),
+                        BookingPlan.STUDENT,
                         LocalDate.now()
                 );
             }

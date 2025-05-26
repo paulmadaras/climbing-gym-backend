@@ -39,22 +39,45 @@ public class UserService {
     /** Create a new user */
     public User create(User user) {
         String raw = user.getPassword();
+
+        // 1) Password strength
         if (!passwordValidator.isValid(raw)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Password must be at least 8 characters, include upper/lowercase, a digit and a special character"
             );
         }
+
+        // 2) Email format
         if (!emailValidator.isValid(user.getEmail())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Invalid email format: " + user.getEmail()
             );
         }
+
+        // 3) Username uniqueness
+        if (userRepo.existsByUsername(user.getUsername())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Username already in use: " + user.getUsername()
+            );
+        }
+
+        // 4) Email uniqueness
+        if (userRepo.existsByEmail(user.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email already in use: " + user.getEmail()
+            );
+        }
+
+        // 5) Hash & save
         String hashed = passwordEncoder.encode(raw);
         user.setPassword(hashed);
         return userRepo.save(user);
     }
+
 
     /** Update existing user */
     public User update(Long id, User updated) {

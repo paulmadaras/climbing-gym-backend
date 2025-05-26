@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface BookingPlanRepository
         extends JpaRepository<BookingPlanImpl, Long> {
 
-    Optional<BookingPlanImpl> findByPlanType(BookingPlan planType);
+    Optional<BookingPlanImpl> findTopByOrderByIdAsc();
 }

@@ -4,6 +4,7 @@ import com.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    // Basic CRUD methods are auto-provided:
-    //   findAll(), findById(), save(), deleteById(), existsById(), etc.
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
+
 }

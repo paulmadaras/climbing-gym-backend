@@ -15,6 +15,12 @@ public class Booking {
     @Column(nullable = false)
     private LocalDate bookingDate;
 
+    @Column(nullable = false)
+    private BookingPlan plan;
+
+    @Column(nullable = false)
+    private double price;
+
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Payment payment;
 
@@ -27,9 +33,11 @@ public class Booking {
 
     public Booking() {}
 
-    public Booking(User user, LocalDate bookingDate) {
+    public Booking(User user, LocalDate bookingDate, BookingPlan plan, double price) {
         this.bookingDate = bookingDate;
         this.user = user;
+        this.plan = plan;
+        this.price = price;
     }
 
     // --- Getters & Setters ---
@@ -57,5 +65,29 @@ public class Booking {
 
     public Long getUserId() {
         return this.user.getId();
+    }
+
+    public BookingPlan getPlan() {
+        return plan;
+    }
+
+    public void setPlan(BookingPlan plan) {
+        this.plan = plan;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
     }
 }

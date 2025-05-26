@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface MembershipPlanRepository
         extends JpaRepository<MembershipPlanImpl, Long> {
+    Optional<MembershipPlanImpl> findTopByOrderByIdAsc();
 }

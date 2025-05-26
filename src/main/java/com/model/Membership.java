@@ -9,6 +9,7 @@ public class Membership {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private MembershipPlan planType;
 
     @Column(nullable = false)

@@ -66,14 +66,14 @@ public class BookingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found: " + id));
     }
 
-    public Booking createBooking(Long userId, LocalDate bookingDate) {
+    public Booking createBooking(Long userId, BookingPlan plan, LocalDate bookingDate) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Invalid user ID: " + userId));
 
         // **Validation: user must NOT have an active membership on bookingDate**
         boolean hasActiveMembership = membershipRepo
-                .findByUserId(userId)
+                .findByUser_Id(userId)
                 .stream()
                 .anyMatch(m ->
                         !m.getStartDate().isAfter(bookingDate) &&
@@ -86,7 +86,7 @@ public class BookingService {
             );
         }
 
-        Booking booking = new Booking(bookingDate, user);
+        Booking booking = new Booking(user, bookingDate, plan, calculatePrice(plan));
         return bookingRepo.save(booking);
     }
 
@@ -95,5 +95,26 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found: " + id);
         }
         bookingRepo.deleteById(id);
+    }
+
+    /**
+     * Creates or updates the BookingPlanConfig.
+     *
+     * @param basePrice    full‐day price
+     * @param discountRate fraction between 0 and 1
+     * @param shoesPrice   rental fee for shoes
+     * @return the saved config entity
+     */
+    public BookingPlanImpl updateConfig(double basePrice,
+                                          double discountRate,
+                                          double shoesPrice) {
+        BookingPlanImpl cfg = bookingPlanRepo.findTopByOrderByIdAsc()
+                .orElseGet(BookingPlanImpl::new);
+
+        cfg.setBasePrice(basePrice);
+        cfg.setDiscountRate(discountRate);
+        cfg.setShoesPrice(shoesPrice);
+
+        return bookingPlanRepo.save(cfg);
     }
 }

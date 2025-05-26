@@ -49,7 +49,7 @@ public class MembershipService {
 
         // **Validation: user must NOT have a booking on the membership startDate**
         boolean hasBookingSameDay = bookingRepo
-                .findByUserId(userId)
+                .findByUser_Id(userId)
                 .stream()
                 .anyMatch(b -> b.getBookingDate().isEqual(startDate));
         if (hasBookingSameDay) {
@@ -63,6 +63,7 @@ public class MembershipService {
         m.setUser(user);
         m.setPlanType(planType);
         m.setStartDate(startDate);
+        m.setPlanType(planType);
         m.setEndDate();
         return membershipRepo.save(m);
     }
@@ -99,5 +100,27 @@ public class MembershipService {
             default:
                 throw new IllegalArgumentException("Unknown membership plan: " + planType);
         }
+    }
+
+
+    /**
+     * Creates or updates the MembershipPlanConfig.
+     *
+     * @param basePrice    full‐access monthly price
+     * @param eightPrice   8‐days/month price
+     * @param discountRate fraction between 0 and 1 for student discount
+     * @return the saved config entity
+     */
+    public MembershipPlanImpl updateConfig(double basePrice,
+                                             double eightPrice,
+                                             double discountRate) {
+        MembershipPlanImpl cfg = membershipPlanRepo.findTopByOrderByIdAsc()
+                .orElseGet(MembershipPlanImpl::new);
+
+        cfg.setBasePrice(basePrice);
+        cfg.setEightPrice(eightPrice);
+        cfg.setDiscountRate(discountRate);
+
+        return membershipPlanRepo.save(cfg);
     }
 }

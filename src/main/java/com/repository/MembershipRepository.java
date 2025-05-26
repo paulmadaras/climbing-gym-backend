@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface MembershipRepository extends JpaRepository<Membership, Long> {
     // Optional: find all memberships for a given user
-    List<Membership> findByUserId(Long userId);
+    List<Membership> findByUser_Id(Long userId);
 }
